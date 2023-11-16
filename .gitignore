@@ -1,0 +1,7 @@
+.idea
+/target
+
+**/TODO.md
+IDEA.md
+playground/**/*
+
