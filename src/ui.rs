@@ -234,7 +234,7 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
     _should_save
 }
 
-fn redraw(state: &mut AppState, mut stdout: &mut Stdout, mut changed: bool) {
+fn redraw(state: &mut AppState, mut stdout: &mut Stdout, changed: bool) {
     execute!(stdout, MoveTo(0, 0)).ok();
     execute!(stdout, terminal::Clear(terminal::ClearType::All)).unwrap();
 
