@@ -6,9 +6,12 @@
 EDD is a command-line tool designed for managing tasks in a `TODO.md` file. It allows users to navigate tasks using keyboard controls, mark tasks as complete/incomplete, and insert new tasks easily.
 
 ## Features
-- **Task Navigation**: Use the up/down arrow keys to navigate through tasks.
+- **Task Navigation**: Easily navigate through tasks.
 - **Complete/Uncomplete Tasks**: Mark tasks as complete or incomplete.
-- **Insert Tasks**: Insert a new task before (`i`) or after (`b`) the selected task.
+- **Edit Tasks**: Edit the description of a task.
+- **Insert Tasks**: Insert a new task after the selected task.
+- **Level Tasks**: Make a task a subtask of the previous task.
+- **Move Tasks**: Move a task up or down.
 - **User-Friendly Interface**: Clear and intuitive CLI interface.
 
 ## Getting Started
