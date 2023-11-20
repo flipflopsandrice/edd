@@ -16,6 +16,7 @@ async fn run_app() {
     let mut app_state = AppState {
         tasks: tasks,
         selected_index: 0,
+        changed: false,
     };
 
     let should_save = render_tasks(&mut app_state).await;
