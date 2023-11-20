@@ -1,5 +1,3 @@
-use std::fs::read;
-use std::io;
 use crossterm::style::{Print, SetBackgroundColor};
 use std::io::{stdout, Stdout, Write};
 use std::time::Duration;
@@ -7,39 +5,35 @@ use crossterm::{event, execute, terminal};
 use crossterm::cursor::{MoveTo, MoveToNextLine};
 use crossterm::event::{Event, KeyCode, KeyEvent};
 use crossterm::style::{Color, ResetColor, SetForegroundColor};
-use crossterm::style::Colored::ForegroundColor;
 use crossterm::terminal::size;
-use crate::{AppState, LEVEL_INDENTATION, Task};
+use crate::constants::LEVEL_INDENTATION;
+use crate::types::{AppState, Task};
 
 
 fn string_length_to_u16(s: &str) -> Option<u16> {
-    let length = s.len();  // length is usize
+    let length = s.len();
     if length <= u16::MAX as usize {
         Some(length as u16)
     } else {
-        None  // The length is too large to fit into a u16
+        None
     }
 }
 
 fn draw_tasks(stdout: &mut Stdout, state: &AppState) {
     for (index, task) in state.tasks.iter().enumerate() {
         if index == state.selected_index {
-            // Set text color to green for the selected task
             execute!(stdout, SetForegroundColor(Color::Green));
         }
 
-        // Print the task
         execute!(stdout, Print(&format!("[{}] {}{}", if task.completed { "x" } else { " " }, LEVEL_INDENTATION.repeat(task.level), task.description)), MoveToNextLine(1));
 
         if index == state.selected_index {
-            // Reset text color back to normal
             execute!(stdout, ResetColor);
         }
     }
 }
 
 pub(crate) fn draw_controls(stdout: &mut Stdout, changed: bool) {
-    // Get the size of the terminal
     let (width, height) = size().unwrap();
 
     execute!(
@@ -48,7 +42,7 @@ pub(crate) fn draw_controls(stdout: &mut Stdout, changed: bool) {
     );
 
     execute!(stdout, SetBackgroundColor(Color::DarkGrey));
-    execute!(stdout, Print("Up/Down/j/k: Move | Space: Toggle | i: insert | d: delete | s: Quit & Save | q: Quit without saving"));
+    execute!(stdout, Print("<ArrK>/j/k: Move, Space: Toggle, i: Ins, d: Del, s: Quit & Save,  q: Quit"));
 
     let changed_text = if changed { "[CHANGED]" } else { "[NO CHANGES]" };
     match string_length_to_u16(changed_text) {
@@ -109,10 +103,11 @@ fn move_cursor_and_readline(state: &mut AppState) {
                 state.tasks[state.selected_index].description = input;
                 break
             },
+            // TODO move words by holding down ctrl
+            // TODO implement home/end to update pos
             _ => {}
         }
 
-        // Redraw the input line
         execute!(stdout, MoveTo(0, state.selected_index as u16)).unwrap();
         execute!(stdout, terminal::Clear(terminal::ClearType::CurrentLine)).unwrap();
         execute!(stdout, Print(&format!("[{}] {}{}", if state.tasks[state.selected_index].completed { "x" } else { " " }, LEVEL_INDENTATION.repeat(state.tasks[state.selected_index].level), input)));
@@ -132,8 +127,6 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
 
     loop {
         execute!(stdout, MoveTo(0, 0));
-
-        // Clear the screen
         execute!(stdout, terminal::Clear(terminal::ClearType::All)).unwrap();
 
         draw_tasks(&mut stdout, state);
@@ -141,7 +134,6 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
 
         stdout.flush().unwrap();
 
-        // Check for keyboard input
         if event::poll(Duration::from_millis(100)).unwrap() {
             if let event::Event::Key(key_event) = event::read().unwrap() {
                 changed = true;

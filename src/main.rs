@@ -1,22 +1,13 @@
 use tokio::runtime::Runtime;
+use types::AppState;
 use crate::ui::render_tasks;
 
 mod utils;
 mod resolver;
 mod parser;
 mod ui;
-
-struct Task {
-    description: String,
-    level: usize,
-    completed: bool,
-}
-struct AppState {
-    tasks: Vec<Task>, // Assuming Task is a struct representing a task
-    selected_index: usize,
-}
-
-const LEVEL_INDENTATION: &str = "  ";
+mod constants;
+mod types;
 
 async fn run_app() {
     let target_file = resolver::determine_target_file();

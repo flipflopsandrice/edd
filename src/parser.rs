@@ -1,7 +1,7 @@
-// Logic for parsing the TODO.md file
-
 use regex::Regex;
-use crate::{LEVEL_INDENTATION, Task, utils};
+use crate::utils;
+use crate::constants::LEVEL_INDENTATION;
+use crate::types::Task;
 
 fn parse_line_to_task(line: &str) -> Option<Task> {
     let regex = Regex::new(r"^(  *|)(?:- )\[([ |x|X])\](?: )(.*)$").unwrap();

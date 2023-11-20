@@ -9,9 +9,6 @@ pub(crate) fn read_file (target_file: &str) -> Vec<String> {
 }
 
 pub(crate) fn write_file (target_file: &str, content: &str) {
-    // Create file if it does not exist, ignore if it does
     let mut file = File::create(target_file).unwrap();
-
-    // Write the content to the file
     file.write_all(content.as_bytes()).unwrap();
 }
