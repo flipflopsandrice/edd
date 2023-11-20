@@ -18,6 +18,14 @@ EDD is a command-line tool designed for managing tasks in a `TODO.md` file. It a
 - Git (for cloning the repository)
 
 ### Installation
+**Option 1: Install using `cargo install`:**
+
+   ```bash
+   cargo install edd
+   ```
+
+**Option 2: Build from source**
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/flipflopsnrice/edd.git
