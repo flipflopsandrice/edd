@@ -31,17 +31,21 @@ pub fn determine_target_file () -> String {
     let target_file = if args.len() > 1 && !args[1].is_empty() {
         args[1].clone()
     } else {
-        let git_root = find_git_root().expect("Not in a git repository.");
-        println!("Found git repository at: {}", git_root.to_str().unwrap());
+        let git_root = match find_git_root() {
+            Some(path) => path,
+            None => {
+                println!("No git repository found!\n- specify a TODO file path\n- move to a git repository folder\n");
+                std::process::exit(1);
+            }
+        };
         let todo_files = find_todo_files(&git_root);
 
         if todo_files.len() > 0 && todo_files[0].exists() {
             todo_files[0].to_str().expect("TODO file path is not valid UTF-8").to_string()
         } else {
-            println!("No TODO.md file found, starting clean.");
             git_root.join("TODO.md").to_str().unwrap().to_string()
         }
     };
 
-    return target_file;
+    target_file
 }
