@@ -1,6 +1,9 @@
 [package]
 name = "edd"
+description = "A CLI Tool for Managing TODO.md Tasks"
 version = "0.1.0"
+authors = ["Erik Beijerman <erik@bmntech.io>"]
+license = "MIT"
 edition = "2021"
 include = [
     "**/*.rs",
