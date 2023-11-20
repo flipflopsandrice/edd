@@ -20,7 +20,7 @@ async fn run_app() {
 
     let should_save = render_tasks(&mut app_state).await;
 
-    if (should_save) {
+    if should_save {
         let str_tasks = parser::tasks_to_str(&app_state.tasks);
         utils::write_file(&target_file, &str_tasks);
         println!("Saved tasks to file: {}\n", target_file);

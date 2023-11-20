@@ -22,13 +22,13 @@ fn string_length_to_u16(s: &str) -> Option<u16> {
 fn draw_tasks(stdout: &mut Stdout, state: &AppState) {
     for (index, task) in state.tasks.iter().enumerate() {
         if index == state.selected_index {
-            execute!(stdout, SetForegroundColor(Color::Green));
+            execute!(stdout, SetForegroundColor(Color::Green)).ok();
         }
 
-        execute!(stdout, Print(&format!("[{}] {}{}", if task.completed { "x" } else { " " }, LEVEL_INDENTATION.repeat(task.level), task.description)), MoveToNextLine(1));
+        execute!(stdout, Print(&format!("[{}] {}{}", if task.completed { "x" } else { " " }, LEVEL_INDENTATION.repeat(task.level), task.description)), MoveToNextLine(1)).ok();
 
         if index == state.selected_index {
-            execute!(stdout, ResetColor);
+            execute!(stdout, ResetColor).ok();
         }
     }
 }
@@ -39,21 +39,21 @@ pub(crate) fn draw_controls(stdout: &mut Stdout, changed: bool) {
     execute!(
         stdout,
         MoveTo(0, height - 1)
-    );
+    ).ok();
 
-    execute!(stdout, SetBackgroundColor(Color::DarkGrey));
-    execute!(stdout, Print("<ArrK>/j/k: Move, Space: Toggle, i: Ins, d: Del, s: Quit & Save,  q: Quit"));
+    execute!(stdout, SetBackgroundColor(Color::DarkGrey)).ok();
+    execute!(stdout, Print("<ArrK>/j/k: Move, Space: Toggle, i: Ins, d: Del, s: Quit & Save,  q: Quit")).ok();
 
     let changed_text = if changed { "[CHANGED]" } else { "[NO CHANGES]" };
     match string_length_to_u16(changed_text) {
         Some(length) => {
-            execute!(stdout, SetBackgroundColor(if changed { Color::Red } else { Color::Green }));
+            execute!(stdout, SetBackgroundColor(if changed { Color::Red } else { Color::Green })).ok();
             execute!(
                 stdout,
                 MoveTo(width - length, height - 1)
-            );
-            execute!(stdout, Print(changed_text));
-            execute!(stdout, ResetColor);
+            ).ok();
+            execute!(stdout, Print(changed_text)).ok();
+            execute!(stdout, ResetColor).ok();
         }
         None => println!("String is too long for u16"),
     }
@@ -108,11 +108,11 @@ fn move_cursor_and_readline(state: &mut AppState) {
             _ => {}
         }
 
-        execute!(stdout, MoveTo(0, state.selected_index as u16)).unwrap();
-        execute!(stdout, terminal::Clear(terminal::ClearType::CurrentLine)).unwrap();
-        execute!(stdout, Print(&format!("[{}] {}{}", if state.tasks[state.selected_index].completed { "x" } else { " " }, LEVEL_INDENTATION.repeat(state.tasks[state.selected_index].level), input)));
+        execute!(stdout, MoveTo(0, state.selected_index as u16)).ok();
+        execute!(stdout, terminal::Clear(terminal::ClearType::CurrentLine)).ok();
+        execute!(stdout, Print(&format!("[{}] {}{}", if state.tasks[state.selected_index].completed { "x" } else { " " }, LEVEL_INDENTATION.repeat(state.tasks[state.selected_index].level), input))).ok();
         stdout.flush().unwrap();
-        execute!(stdout, MoveTo(pos as u16, state.selected_index as u16)).unwrap();
+        execute!(stdout, MoveTo(pos as u16, state.selected_index as u16)).ok();
     }
 
 }
@@ -121,11 +121,11 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
     let mut stdout = stdout();
     terminal::enable_raw_mode().unwrap();
 
-    let mut should_save: bool = false;
+    let mut _should_save: bool = false;
     let mut changed: bool = false;
 
     loop {
-        execute!(stdout, MoveTo(0, 0));
+        execute!(stdout, MoveTo(0, 0)).ok();
         execute!(stdout, terminal::Clear(terminal::ClearType::All)).unwrap();
 
         draw_tasks(&mut stdout, state);
@@ -137,12 +137,12 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
             if let event::Event::Key(key_event) = event::read().unwrap() {
                 changed = true;
                 if key_event.code == KeyCode::Char('s') {
-                    should_save = true;
+                    _should_save = true;
                     break;
                 }
 
                 if key_event.code == KeyCode::Char('q') {
-                    should_save = false;
+                    _should_save = false;
                     break;
                 }
 
@@ -206,9 +206,9 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
     }
 
     execute!(stdout, terminal::Clear(terminal::ClearType::All)).unwrap();
-    execute!(stdout, MoveTo(0, 0));
+    execute!(stdout, MoveTo(0, 0)).ok();
 
     terminal::disable_raw_mode().unwrap();
 
-    should_save
+    _should_save
 }
