@@ -42,7 +42,7 @@ pub(crate) fn draw_controls(stdout: &mut Stdout, changed: bool) {
     ).ok();
 
     execute!(stdout, SetBackgroundColor(Color::DarkGrey)).ok();
-    execute!(stdout, Print("<ArrK>/j/k: Move, Space: Toggle, i: Ins, d: Del, s: Quit & Save,  q: Quit")).ok();
+    execute!(stdout, Print("<ArrK>/j/k: Move, Space: Toggle, i: Ins, d: Del, e: Edit, s: Quit & Save,  q: Quit")).ok();
 
     let changed_text = if changed { "[CHANGED]" } else { "[NO CHANGES]" };
     match string_length_to_u16(changed_text) {
@@ -76,35 +76,40 @@ fn move_cursor_and_readline(state: &mut AppState) {
             KeyCode::Char(c) => {
                 input.insert(pos - min_pos, c);
                 pos += 1;
-            },
+            }
             KeyCode::Right => {
                 if pos - min_pos < input.len() {
                     pos += 1;
                 }
-            },
+            }
             KeyCode::Left => {
                 if pos > min_pos {
                     pos -= 1;
                 }
-            },
+            }
             KeyCode::Backspace => {
                 if pos > min_pos {
                     input.remove(pos - min_pos - 1);
                     pos -= 1;
                 }
-            },
+            }
             KeyCode::Delete => {
                 if pos - min_pos < input.len() {
                     input.remove(pos - min_pos);
                 }
-            },
+            }
             KeyCode::Esc => break,
             KeyCode::Enter => {
                 state.tasks[state.selected_index].description = input;
-                break
-            },
-            // TODO move words by holding down ctrl
-            // TODO implement home/end to update pos
+                break;
+            }
+            KeyCode::Home => {
+                pos = min_pos;
+            }
+            KeyCode::End => {
+                pos = input.len() + min_pos;
+            }
+
             _ => {}
         }
 
@@ -114,7 +119,6 @@ fn move_cursor_and_readline(state: &mut AppState) {
         stdout.flush().unwrap();
         execute!(stdout, MoveTo(pos as u16, state.selected_index as u16)).ok();
     }
-
 }
 
 pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
@@ -123,18 +127,13 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
 
     let mut _should_save: bool = false;
     let mut changed: bool = false;
+    let mut editing: bool = false;
 
     loop {
-        execute!(stdout, MoveTo(0, 0)).ok();
-        execute!(stdout, terminal::Clear(terminal::ClearType::All)).unwrap();
-
-        draw_tasks(&mut stdout, state);
-        draw_controls(&mut stdout, changed);
-
-        stdout.flush().unwrap();
+        redraw(state, &mut stdout, changed);
 
         if event::poll(Duration::from_millis(100)).unwrap() {
-            if let event::Event::Key(key_event) = event::read().unwrap() {
+            if let Event::Key(key_event) = event::read().unwrap() {
                 changed = true;
                 if key_event.code == KeyCode::Char('s') {
                     _should_save = true;
@@ -147,14 +146,30 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
                 }
 
                 if key_event.code == KeyCode::Char('j') || key_event.code == KeyCode::Down {
-                    if state.selected_index < state.tasks.len() - 1 {
-                        state.selected_index += 1;
+                    if key_event.modifiers == event::KeyModifiers::CONTROL {
+                        if state.selected_index < state.tasks.len() - 1 {
+                            let task = state.tasks.remove(state.selected_index);
+                            state.tasks.insert(state.selected_index + 1, task);
+                            state.selected_index += 1;
+                        }
+                    } else {
+                        if state.selected_index < state.tasks.len() - 1 {
+                            state.selected_index += 1;
+                        }
                     }
                 }
 
                 if key_event.code == KeyCode::Char('k') || key_event.code == KeyCode::Up {
-                    if state.selected_index > 0 {
-                        state.selected_index -= 1;
+                    if key_event.modifiers == event::KeyModifiers::CONTROL {
+                        if state.selected_index > 0 {
+                            let task = state.tasks.remove(state.selected_index);
+                            state.tasks.insert(state.selected_index - 1, task);
+                            state.selected_index -= 1;
+                        }
+                    } else {
+                        if state.selected_index > 0 {
+                            state.selected_index -= 1;
+                        }
                     }
                 }
 
@@ -183,7 +198,11 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
                         state.tasks.insert(0, new_task);
                     }
 
-                    move_cursor_and_readline(state);
+                    editing = true;
+                }
+
+                if key_event.code == KeyCode::Char('e') {
+                    editing = true;
                 }
 
                 if key_event.code == KeyCode::Tab {
@@ -195,11 +214,13 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
                         state.tasks[state.selected_index].level -= 1;
                     }
                 }
-
-                if key_event.code == KeyCode::Char('e') {
-                    move_cursor_and_readline(state);
-                }
             }
+        }
+
+        if editing {
+            redraw(state, &mut stdout, changed);
+            move_cursor_and_readline(state);
+            editing = false;
         }
 
         tokio::time::sleep(Duration::from_millis(50)).await;
@@ -211,4 +232,14 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
     terminal::disable_raw_mode().unwrap();
 
     _should_save
+}
+
+fn redraw(state: &mut AppState, mut stdout: &mut Stdout, mut changed: bool) {
+    execute!(stdout, MoveTo(0, 0)).ok();
+    execute!(stdout, terminal::Clear(terminal::ClearType::All)).unwrap();
+
+    draw_tasks(&mut stdout, state);
+    draw_controls(&mut stdout, changed);
+
+    stdout.flush().unwrap();
 }
