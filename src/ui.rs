@@ -20,13 +20,20 @@ fn string_length_to_u16(s: &str) -> Option<u16> {
 }
 
 fn draw_tasks(stdout: &mut Stdout, state: &AppState) {
-    for (index, task) in state.tasks.iter().enumerate() {
+    let mut idx = 0;
+    for (index, task) in state.tasks.iter().
+        enumerate().filter(
+        |(index, task)| {
+            index >= &state.offsetY && index < &(state.offsetY + size().unwrap().1 as usize - 1)
+        }
+    ) {
         let color = TaskColor {
             foreground: if index == state.selected_index { Some(Color::Green) } else { None },
             background: if index == state.selected_index { Some(Color::DarkGrey) } else { None },
         };
-        draw_task(stdout, &color, index, task);
+        draw_task(stdout, &color, idx, task);
         execute!(stdout, MoveToNextLine(1)).ok();
+        idx+=1;
     }
 }
 
@@ -239,6 +246,9 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
                 }
 
                 if key_event.code == KeyCode::Char('j') || key_event.code == KeyCode::Down {
+                    if state.selected_index + 1 >= state.offsetY + size().unwrap().1 as usize - 1 {
+                        state.offsetY += 1;
+                    }
                     if key_event.modifiers == event::KeyModifiers::CONTROL {
                         if state.selected_index < state.tasks.len() - 1 {
                             let task = state.tasks.remove(state.selected_index);
@@ -253,6 +263,9 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
                 }
 
                 if key_event.code == KeyCode::Char('k') || key_event.code == KeyCode::Up {
+                    if state.selected_index > 0 && state.selected_index <= state.offsetY {
+                        state.offsetY -= 1;
+                    }
                     if key_event.modifiers == event::KeyModifiers::CONTROL {
                         if state.selected_index > 0 {
                             let task = state.tasks.remove(state.selected_index);
@@ -314,10 +327,19 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
 
                 if key_event.code == KeyCode::Home {
                     state.selected_index = 0;
+
+                    // Update the offset if out of screen
+                    if state.selected_index < state.offsetY {
+                        state.offsetY = state.selected_index;
+                    }
                 }
 
                 if key_event.code == KeyCode::End {
                     state.selected_index = state.tasks.len() - 1;
+
+                    if state.selected_index >= state.offsetY + size().unwrap().1 as usize - 1 {
+                        state.offsetY = state.selected_index - size().unwrap().1 as usize + 2;
+                    }
                 }
             }
         }
