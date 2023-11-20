@@ -6,7 +6,7 @@ fn find_git_root() -> Option<PathBuf> {
     let current_dir = env::current_dir().unwrap();
     Repository::discover(current_dir)
         .ok()
-        .map(|repo| repo.path().to_path_buf())
+        .and_then(|repo| repo.workdir().map(|path| path.to_path_buf()))
 }
 
 fn find_todo_files(starting_path: &Path) -> Vec<PathBuf> {
@@ -32,6 +32,7 @@ pub fn determine_target_file () -> String {
         args[1].clone()
     } else {
         let git_root = find_git_root().expect("Not in a git repository.");
+        println!("Found git repository at: {}", git_root.to_str().unwrap());
         let todo_files = find_todo_files(&git_root);
 
         if todo_files.len() > 0 && todo_files[0].exists() {

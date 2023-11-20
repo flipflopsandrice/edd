@@ -57,9 +57,10 @@ cargo run <optional path to TODO.md file>
 
 ### Keyboard Controls
 - `i`: Insert a new task.
+- `d`: Delete the selected task.
 - `e`: Edit the description of the selected task, hit `Enter` to save or `Esc` to cancel.
-- `s`: Save changes to the `TODO.md` file.
-- `q`: Quit the program.
+- `s`: Quit & save changes to the `TODO.md` file.
+- `q`: Quit the program, without saving.
 - `Space`: Complete/Uncomplete selected task.
 - `Arrow Up/Down or j/k`: Navigate through tasks.
 - `<ctrl> + Arrow Up/Down or j/k`: Move the selected task up/down.

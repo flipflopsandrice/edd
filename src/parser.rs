@@ -22,17 +22,23 @@ fn parse_line_to_task(line: &str) -> Option<Task> {
 }
 
 
-pub(crate) async fn str_to_tasks(target_file: &str) -> Vec<Task> {
-    let lines = utils::read_file(&target_file);
-    let mut tasks: Vec<Task> = Vec::new();
+pub(crate) async fn file_to_tasks(target_file: &str) -> Vec<Task> {
+    match utils::read_file(&target_file) {
+        Ok(lines) => {
+            let mut tasks: Vec<Task> = Vec::new();
 
-    for line in lines {
-        match parse_line_to_task(&line) {
-            Some(task) => tasks.push(task),
-            None => continue,
+            for line in lines {
+                match parse_line_to_task(&line) {
+                    Some(task) => tasks.push(task),
+                    None => continue,
+                }
+            }
+            tasks
+        },
+        Err(_) => {
+            Vec::new()
         }
     }
-    tasks
 }
 
 pub(crate) fn tasks_to_str(tasks: &Vec<Task>) -> String {

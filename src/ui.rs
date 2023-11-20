@@ -123,7 +123,6 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
 
     let mut should_save: bool = false;
     let mut changed: bool = false;
-    let mut editing: bool = false;
 
     loop {
         execute!(stdout, MoveTo(0, 0));
@@ -137,63 +136,68 @@ pub(crate) async fn render_tasks(state: &mut AppState) -> bool {
         if event::poll(Duration::from_millis(100)).unwrap() {
             if let event::Event::Key(key_event) = event::read().unwrap() {
                 changed = true;
-                if (key_event.code == KeyCode::Char('s')) {
+                if key_event.code == KeyCode::Char('s') {
                     should_save = true;
                     break;
                 }
 
-                if (key_event.code == KeyCode::Char('q')) {
+                if key_event.code == KeyCode::Char('q') {
                     should_save = false;
                     break;
                 }
 
-                if (key_event.code == KeyCode::Char('j') || key_event.code == KeyCode::Down) {
+                if key_event.code == KeyCode::Char('j') || key_event.code == KeyCode::Down {
                     if state.selected_index < state.tasks.len() - 1 {
                         state.selected_index += 1;
                     }
                 }
 
-                if (key_event.code == KeyCode::Char('k') || key_event.code == KeyCode::Up) {
+                if key_event.code == KeyCode::Char('k') || key_event.code == KeyCode::Up {
                     if state.selected_index > 0 {
                         state.selected_index -= 1;
                     }
                 }
 
-                if (key_event.code == KeyCode::Char(' ')) {
+                if key_event.code == KeyCode::Char(' ') {
                     state.tasks[state.selected_index].completed = !state.tasks[state.selected_index].completed;
                 }
 
-                if (key_event.code == KeyCode::Char('d')) {
+                if key_event.code == KeyCode::Char('d') {
                     state.tasks.remove(state.selected_index);
                     if state.selected_index > 0 {
                         state.selected_index -= 1;
                     }
                 }
 
-                if (key_event.code == KeyCode::Char('i')) {
-                    let mut new_task = Task {
+                if key_event.code == KeyCode::Char('i') {
+                    let level = if state.tasks.len() > 0 { state.tasks[state.selected_index].level } else { 0 };
+                    let new_task = Task {
                         description: String::new(),
-                        level: state.tasks[state.selected_index].level,
+                        level,
                         completed: false,
                     };
-                    state.tasks.insert(state.selected_index + 1, new_task);
-                    state.selected_index += 1;
+                    if state.tasks.len() > 0 {
+                        state.tasks.insert(state.selected_index + 1, new_task);
+                        state.selected_index += 1;
+                    } else {
+                        state.tasks.insert(0, new_task);
+                    }
+
+                    move_cursor_and_readline(state);
                 }
 
-                if (key_event.code == KeyCode::Tab) {
+                if key_event.code == KeyCode::Tab {
                     state.tasks[state.selected_index].level += 1;
                 }
 
-                if (key_event.code == KeyCode::BackTab) {
+                if key_event.code == KeyCode::BackTab {
                     if state.tasks[state.selected_index].level > 0 {
                         state.tasks[state.selected_index].level -= 1;
                     }
                 }
 
-                if (key_event.code == KeyCode::Char('e')) {
-                    editing = true;
+                if key_event.code == KeyCode::Char('e') {
                     move_cursor_and_readline(state);
-                    editing = false;
                 }
             }
         }

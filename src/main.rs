@@ -11,7 +11,7 @@ mod types;
 
 async fn run_app() {
     let target_file = resolver::determine_target_file();
-    let tasks = parser::str_to_tasks(&target_file).await;
+    let tasks = parser::file_to_tasks(&target_file).await;
 
     let mut app_state = AppState {
         tasks: tasks,
